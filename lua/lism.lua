@@ -65,10 +65,12 @@ function M.setup(opts)
         if node and node:type() == "list_lit" then
           -- subtract 2 to exclude opening and closing parentheses
           for i = 1, node:child_count() - 2 do
-            local sr, sc, er, ec = node:child(i):range()
-            local color = hsl_to_rgb((i-1) * 360 / (node:child_count() - 2 ), saturation, lightness)
-            vim.api.nvim_set_hl(0, "ArgPos"..i, {bg = color})
-            vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, {hl_group = 'ArgPos'..i, end_row = er, end_col = ec})
+            if node:child(i):type() ~= "comment" then
+              local sr, sc, er, ec = node:child(i):range()
+              local color = hsl_to_rgb((i-1) * 360 / (node:child_count() - 2 ), saturation, lightness)
+              vim.api.nvim_set_hl(0, "ArgPos"..i, {bg = color})
+              vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, {hl_group = 'ArgPos'..i, end_row = er, end_col = ec})
+            end
           end
         end
       end
