@@ -1,6 +1,6 @@
 # lism.nvim
 `lism.nvim` is a Neovim plugin that highlights the elements of Lisp forms.  
-When the cursor is on an opening bracket, every element inside that form gets its own background color,  
+When the cursor is on an bracket, every element inside that form gets its own background color,  
 so you can see at a glance how many arguments a form has and where each one ends.  
 
 
@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/68a36705-b7c7-4c4d-b421-e0d9482dbbf8
 - Clojure
 
 ## Features
-- Highlights each element of the list under the cursor when the cursor is on `(`, `[`, or `{`
+- Highlights each element of the list under the cursor when the cursor is on `()`, `[]`, or `{}`
 - Colors are spread evenly around the hue circle according to the number of elements
 - Comments inside the list are not highlighted
 - Nothing is highlighted if the list is not closed, which helps spot a missing `)`

@@ -10,9 +10,9 @@ local list_types = {
   list = true
 }
 local open_bracket_types = {
-  ["("] = true,
-  ["["] = true,
-  ["{"] = true
+  ["("] = true, [")"] = true,
+  ["["] = true, ["]"] = true,
+  ["{"] = true, ["}"] = true
 }
 local skip_types = {
   ["("] = true, [")"] = true,
