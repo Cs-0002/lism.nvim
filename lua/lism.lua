@@ -3,6 +3,8 @@ local M = {}
 
 local list_types = {
   list_lit = true,
+  defun = true,
+  loop_macro = true,
   vec_lit = true,
   map_lit = true,
   list = true
@@ -11,6 +13,12 @@ local open_bracket_types = {
   ["("] = true,
   ["["] = true,
   ["{"] = true
+}
+local skip_types = {
+  ["("] = true, [")"] = true,
+  ["["] = true, ["]"] = true,
+  ["{"] = true, ["}"] = true,
+  comment = true,
 }
 
 --- Convert HSL color to RGB hex string
@@ -55,6 +63,26 @@ local function hsl_to_rgb(H, S, L)
   return string.format('#%02X%02X%02X', math.floor(R), math.floor(G), math.floor(B))
 end
 
+--- Collect the elements of a form, expanding defun_header
+--- @param node TSNode
+--- @return TSNode[]
+local function collect_elements(node)
+  local elems = {}
+  for child in node:iter_children() do
+    local t = child:type()
+    if t == "defun_header" then
+      for c in child:iter_children() do
+        if not skip_types[c:type()] then
+          table.insert(elems, c)
+        end
+      end
+    elseif not skip_types[t] then
+      table.insert(elems, child)
+    end
+  end
+  return elems
+end
+
 --- Set up lism.nvim to highlight list elements under the cursor
 --- @param opts table | nil Optional configuration
 --- @param opts.saturation number Saturation of highlight colors (0-100)
@@ -79,14 +107,12 @@ function M.setup(opts)
       local undercursor = line:sub(cursor[2] + 1, cursor[2] + 1)
 
       if open_bracket_types[undercursor] and node and list_types[node:type()] then
-        -- subtract 2 to exclude opening and closing brackets
-        for i = 1, node:child_count() - 2 do
-          if node:child(i):type() ~= "comment" then
-            local sr, sc, er, ec = node:child(i):range()
-            local color = hsl_to_rgb((i-1) * 360 / (node:child_count() - 2 ), saturation, lightness)
-            vim.api.nvim_set_hl(0, "ArgPos"..i, {bg = color})
-            vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, {hl_group = 'ArgPos'..i, end_row = er, end_col = ec})
-          end
+        local elems = collect_elements(node)
+        for i, elem in ipairs(elems) do
+          local sr, sc, er, ec = elem:range()
+          local color = hsl_to_rgb((i - 1) * 360 / #elems, saturation, lightness)
+          vim.api.nvim_set_hl(0, "ArgPos" .. i, { bg = color })
+          vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, { hl_group = "ArgPos" .. i, end_row = er, end_col = ec })
         end
       end
     end
