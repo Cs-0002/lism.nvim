@@ -1,6 +1,18 @@
 local M = {}
 
 
+local list_types = {
+  list_lit = true,
+  vec_lit = true,
+  map_lit = true,
+  list = true
+}
+local open_bracket_types = {
+  ["("] = true,
+  ["["] = true,
+  ["{"] = true
+}
+
 --- Convert HSL color to RGB hex string
 --- @param H number Hue (0-360)
 --- @param S number Saturation (0-100)
@@ -55,22 +67,25 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd({"CursorMoved", "BufWinEnter"}, {
     pattern = {"*"},
     callback = function()
-      local node = vim.treesitter.get_node()
       vim.api.nvim_buf_clear_namespace(0, mark_ns, 0, -1)
+      local ok, parser = pcall(vim.treesitter.get_parser)
+      if not ok or not parser then return end
+      parser:parse()
+
+      local node = vim.treesitter.get_node()
       local cursor = vim.api.nvim_win_get_cursor(0)
       local line = vim.api.nvim_get_current_line()
       -- cursor[2] is 0-indexed column, sub() is 1-indexed
       local undercursor = line:sub(cursor[2] + 1, cursor[2] + 1)
-      if undercursor == "(" then
-        if node and node:type() == "list_lit" then
-          -- subtract 2 to exclude opening and closing parentheses
-          for i = 1, node:child_count() - 2 do
-            if node:child(i):type() ~= "comment" then
-              local sr, sc, er, ec = node:child(i):range()
-              local color = hsl_to_rgb((i-1) * 360 / (node:child_count() - 2 ), saturation, lightness)
-              vim.api.nvim_set_hl(0, "ArgPos"..i, {bg = color})
-              vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, {hl_group = 'ArgPos'..i, end_row = er, end_col = ec})
-            end
+
+      if open_bracket_types[undercursor] and node and list_types[node:type()] then
+        -- subtract 2 to exclude opening and closing parentheses
+        for i = 1, node:child_count() - 2 do
+          if node:child(i):type() ~= "comment" then
+            local sr, sc, er, ec = node:child(i):range()
+            local color = hsl_to_rgb((i-1) * 360 / (node:child_count() - 2 ), saturation, lightness)
+            vim.api.nvim_set_hl(0, "ArgPos"..i, {bg = color})
+            vim.api.nvim_buf_set_extmark(0, mark_ns, sr, sc, {hl_group = 'ArgPos'..i, end_row = er, end_col = ec})
           end
         end
       end
