@@ -55,7 +55,7 @@ local function hsl_to_rgb(H, S, L)
   return string.format('#%02X%02X%02X', math.floor(R), math.floor(G), math.floor(B))
 end
 
---- Setup lism.nvim nator highlight on cursor position
+--- Set up lism.nvim to highlight list elements under the cursor
 --- @param opts table | nil Optional configuration
 --- @param opts.saturation number Saturation of highlight colors (0-100)
 --- @param opts.lightness number Lightness of highlight colors (0-100)
@@ -79,7 +79,7 @@ function M.setup(opts)
       local undercursor = line:sub(cursor[2] + 1, cursor[2] + 1)
 
       if open_bracket_types[undercursor] and node and list_types[node:type()] then
-        -- subtract 2 to exclude opening and closing parentheses
+        -- subtract 2 to exclude opening and closing brackets
         for i = 1, node:child_count() - 2 do
           if node:child(i):type() ~= "comment" then
             local sr, sc, er, ec = node:child(i):range()
